@@ -19,11 +19,15 @@ chunkdecode.ps1: Reassembles the original file from the chunks, decoding and dec
 
 The script will place the encoded chunks and a checksum file for verification in the current directory.
 
+![encoding](https://github.com/jinjirosan/ChunkyChunk/blob/main/_images/chunkencode.png)
+
 ### Decoding a File
 - Run chunkdecode.ps1.
 - Enter the base file characters (the first 5 characters of the original file name plus the time in HHMM format when the file was encoded).
 
 The script will search for the chunks and the checksum file in the current directory, reassemble the original file, and verify its integrity.
+
+![decoding](https://github.com/jinjirosan/ChunkyChunk/blob/main/_images/chunkdecode.png)
 
 ## Script Details
 
