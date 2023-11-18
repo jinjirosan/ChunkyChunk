@@ -8,6 +8,7 @@ This repository contains two PowerShell scripts for encoding and decoding files.
 ## Scripts
 
 chunkencode.ps1: Splits a file into chunks, double encodes and compresses each chunk.
+
 chunkdecode.ps1: Reassembles the original file from the chunks, decoding and decompressing them.
 
 ## Usage
