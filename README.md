@@ -3,7 +3,7 @@ Powershell encode-decode to exfiltrate files through DLP over mail.
 
 ## PowerShell File Encode and Decode Scripts
 
-This repository contains two PowerShell scripts for encoding and decoding files. The encode script splits a file into multiple chunks, performs double Base64 encoding and gzip compression on each chunk, and saves them with a unique naming scheme. The decode script reverses this process, reconstructing the original file from the chunks.
+This repository contains two PowerShell scripts for encoding and decoding files. The encode script splits a file into multiple chunks of random sizes between 3 and 6 Mb, performs double Base64 encoding and gzip compression on each chunk, and saves them with a unique naming scheme. The decode script reverses this process, reconstructing the original file from the chunks.
 
 ## Scripts
 
