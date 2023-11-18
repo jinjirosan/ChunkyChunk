@@ -47,6 +47,7 @@ Verifies the integrity of the reconstructed file using the checksum.
 
 PowerShell 5.1 or higher.
 Sufficient disk space for storing encoded chunks and the reconstructed file.
-Notes
+
+## Notes
 
 The scripts are designed to handle large files by breaking them down into manageable chunks without using a discernible pattern (different sizes).
