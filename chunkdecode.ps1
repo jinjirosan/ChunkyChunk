@@ -36,8 +36,9 @@ if (-not (Test-Path $outputDirectory)) {
 }
 
 # Find all the chunk files based on the base file characters
-$chunkFilesPattern = "${baseFileChars}_chunk*.txt"
-$chunkFiles = Get-ChildItem -Path $currentDirectory -Filter $chunkFilesPattern | Sort-Object Name
+$chunkFiles = Get-ChildItem -Path $currentDirectory -File | 
+    Where-Object { $_.Name -match "^${baseFileChars}_[a-z0-9]{8}\d{5}\..+" } |
+    Sort-Object { [regex]::Match($_.Name, '\d{5}').Value }
 
 if ($chunkFiles.Count -eq 0) {
     Write-Host "No chunk files found in the current directory."
@@ -51,17 +52,45 @@ Write-Host "Reconstructing to $outputFilePath"
 $outputFileStream = [System.IO.FileStream]::new($outputFilePath, [System.IO.FileMode]::Create)
 foreach ($chunkFile in $chunkFiles) {
     Write-Host "Processing chunk: $($chunkFile.Name)"
-    $doubleEncodedContent = Get-Content $chunkFile.FullName -Raw
-    $gzippedData = [Convert]::FromBase64String($doubleEncodedContent)
+    $hybridContent = Get-Content $chunkFile.FullName -Raw
+    
+    # Parse hybrid format
+    $parts = $hybridContent -split '\|'
+    $mainBase64 = $parts[0] + $parts[2]
+    $hexSection = $parts[1] -replace '[^0-9A-F]', ''
+    
+    # Reconstruct full Base64
+    $hexBytes = for ($i=0; $i -lt $hexSection.Length; $i+=2) {
+        [Convert]::ToByte($hexSection.Substring($i,2), 16)
+    }
+    $reconstructedBase64 = $mainBase64 + [Convert]::ToBase64String($hexBytes)
+    
+    # Process the compressed data
+    $gzippedData = [Convert]::FromBase64String($reconstructedBase64)
     $gzippedStream = New-Object System.IO.MemoryStream(,$gzippedData)
-    $gzipReader = New-Object System.IO.Compression.GZipStream($gzippedStream, [System.IO.Compression.CompressionMode]::Decompress)
+    
+    # Handle random compression levels
+    $gzipReader = New-Object System.IO.Compression.GZipStream(
+        $gzippedStream, 
+        [System.IO.Compression.CompressionMode]::Decompress
+    )
+    
+    # Read and remove random header
     $reader = New-Object System.IO.StreamReader($gzipReader)
     $decompressedBase64String = $reader.ReadToEnd()
+    $decompressedBytes = [Text.Encoding]::UTF8.GetBytes($decompressedBase64String)
+    $cleanBytes = $decompressedBytes[4..($decompressedBytes.Length-1)]
+    
+    # Remove random comments from Base64
+    $cleanBase64 = ($cleanBytes -as [string]) -replace '#.*?\n', ''
+    
+    # Final decoding
+    $chunkBytes = [Convert]::FromBase64String($cleanBase64)
+    $outputFileStream.Write($chunkBytes, 0, $chunkBytes.Length)
+    
     $reader.Close()
     $gzipReader.Close()
     $gzippedStream.Close()
-    $chunkBytes = [Convert]::FromBase64String($decompressedBase64String)
-    $outputFileStream.Write($chunkBytes, 0, $chunkBytes.Length)
 }
 $outputFileStream.Close()
 
